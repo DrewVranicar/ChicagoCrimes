@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chicago Crimes Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #03090e;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #87bdcd 0%, #57a8ff 100%);
+            color: white;
+            padding: 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar h1 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(6, 106, 255, 0.2);
+        }
+
+        .sidebar .subtitle {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 30px;
+        }
+
+        .nav-item {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.2);
+            font-weight: bold;
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Header */
+        .page-header {
+            background: rgb(242, 242, 242);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .page-header h2 {
+            color: #5ec1ff;
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .page-header p {
+            color: #666;
+            line-height: 1.6;
+            font-size: 1.05rem;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgb(167, 167, 167);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-change {
+            margin-top: 8px;
+            font-size: 0.85rem;
+        }
+
+        .stat-change.positive { color: #10b981; }
+        .stat-change.negative { color: #ef4444; }
+
+        /* Chart Sections */
+        .chart-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .chart-section h3 {
+            color: #1e3a8a;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        .chart-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #1e3a8a;
+            border-radius: 4px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-top: 20px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <h1>🚨 Chicago Crimes</h1>
+            <p class="subtitle">Data Analytics Dashboard</p>
+            
+            <div class="nav-item active" data-page="overview">
+                <span class="nav-icon">📊</span>
+                <span>Overview</span>
+            </div>
+            <div class="nav-item" data-page="trends">
+                <span class="nav-icon">📈</span>
+                <span>Crime Trends</span>
+            </div>
+            <div class="nav-item" data-page="types">
+                <span class="nav-icon">🔍</span>
+                <span>Crime Types</span>
+            </div>
+            <div class="nav-item" data-page="patterns">
+                <span class="nav-icon">⏰</span>
+                <span>Time Patterns</span>
+            </div>
+            <div class="nav-item" data-page="comparison">
+                <span class="nav-icon">📊</span>
+                <span>Year Comparison</span>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- OVERVIEW PAGE -->
+            <div class="page active" id="overview">
+                <div class="page-header">
+                    <h2>Chicago Crime Data Analysis</h2>
+                    <p>
+                        This dashboard presents a comprehensive analysis of crime data from the City of Chicago, 
+                        utilizing the official Chicago Data Portal's publicly available crime dataset. The data 
+                        encompasses over 8 million crime incidents reported to the Chicago Police Department.
+                    </p>
+                </div>
+
+                <div class="chart-section">
+                    <h3>About This Project</h3>
+                    <div class="chart-description">
+                        <p style="margin-bottom: 15px;">
+                            <strong>Data Source:</strong> Chicago Data Portal 
+                            (<a href="https://data.cityofchicago.org/" target="_blank">data.cityofchicago.org</a>)
+                        </p>
+                        <p style="margin-bottom: 15px;">
+                            <strong>Methodology:</strong> This analysis processes crime incident data using R, 
+                            focusing on temporal patterns, crime type distributions, and long-term trends. 
+                            The data is automatically updated monthly to reflect the latest reported incidents.
+                        </p>
+                        <p style="margin-bottom: 15px;">
+                            <strong>Processing Pipeline:</strong>
+                        </p>
+                        <ul style="margin-left: 20px; color: #666;">
+                            <li>Download crime data via Socrata Open Data API</li>
+                            <li>Extract relevant fields (date, crime type, arrest status, domestic violence flag)</li>
+                            <li>Aggregate data into monthly, daily, and hourly summaries</li>
+                            <li>Generate visualization-ready JSON files for web display</li>
+                            <li>Automated monthly updates via GitHub Actions</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="stats-grid" id="statsCards">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalCrimes">Loading...</div>
+                        <div class="stat-label">Total Crimes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="dateRange">Loading...</div>
+                        <div class="stat-label">Years Covered</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="lastUpdate">Loading...</div>
+                        <div class="stat-label">Last Updated</div>
+                    </div>
+                </div>
+
+                <div class="chart-section">
+                    <h3>Data Coverage</h3>
+                    <div class="chart-description">
+                        The dataset includes all reported crimes from 2001 to present, updated monthly. 
+                        This visualization shows the total number of crimes recorded each year, revealing 
+                        long-term trends in Chicago's crime landscape.
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="yearlyOverviewChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TRENDS PAGE -->
+            <div class="page" id="trends">
+                <div class="page-header">
+                    <h2>Crime Trends Over Time</h2>
+                    <p>
+                        Analyzing monthly and yearly crime trends reveals patterns in Chicago's public safety 
+                        landscape. These visualizations help identify long-term improvements or areas of concern.
+                    </p>
+                </div>
+
+                <div class="chart-section">
+                    <h3>Monthly Crime Trends</h3>
+                    <div class="chart-description">
+                        This chart displays the total number of crimes reported each month over the past several years. 
+                        Monthly data reveals seasonal patterns and recent trends more clearly than yearly aggregates. 
+                        Notice any cyclical patterns or significant changes in crime rates over time.
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="monthlyTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-section">
+                    <h3>5-Year Trend Analysis</h3>
+                    <div class="chart-description">
+                        Focusing on the most recent 5 years provides insight into current trends and recent policy 
+                        impacts. This view helps answer: Is crime increasing or decreasing in recent years? 
+                        Are there any sudden changes that correspond to major events or policy changes?
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="recentTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CRIME TYPES PAGE -->
+            <div class="page" id="types">
+                <div class="page-header">
+                    <h2>Crime Type Analysis</h2>
+                    <p>
+                        Not all crimes are equal. This section breaks down which types of crimes are most common 
+                        and how different crime categories have evolved over time.
+                    </p>
+                </div>
+
+                <div class="chart-section">
+                    <h3>Top Crime Types</h3>
+                    <div class="chart-description">
+                        This chart shows the most frequently reported crime types in Chicago. Property crimes like 
+                        theft typically dominate the statistics, but violent crimes, though less frequent, are 
+                        particularly concerning for public safety. Understanding this distribution helps allocate 
+                        law enforcement resources effectively.
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="topCrimesChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-section">
+                    <h3>Crime Types Over Time</h3>
+                    <div class="chart-description">
+                        This stacked area chart reveals how different crime types have trended over time. 
+                        Some crimes may be decreasing while others increase. For example, motor vehicle theft 
+                        patterns often differ significantly from assault patterns. This visualization helps 
+                        identify which specific crime categories require focused intervention.
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="crimeTypesTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TIME PATTERNS PAGE -->
+            <div class="page" id="patterns">
+                <div class="page-header">
+                    <h2>Temporal Crime Patterns</h2>
+                    <p>
+                        When do crimes occur? Understanding daily and weekly patterns can inform police 
+                        patrol schedules and help residents make informed safety decisions.
+                    </p>
+                </div>
+
+                <div class="chart-section">
+                    <h3>Crimes by Hour of Day</h3>
+                    <div class="chart-description">
+                        This chart shows crime frequency across 24 hours. Notice how crime patterns vary throughout 
+                        the day - typically peaking in late afternoon/evening hours and dropping during early morning. 
+                        This information is valuable for optimizing police patrol schedules and understanding when 
+                        residents should be most vigilant.
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="hourlyChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-section">
+                    <h3>Crimes by Day of Week</h3>
+                    <div class="chart-description">
+                        Are weekends more dangerous than weekdays? This visualization breaks down crime frequency 
+                        by day of the week. Typically, weekends see different crime patterns than weekdays, with 
+                        certain crime types (like assault) peaking on Friday and Saturday nights.
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="dayOfWeekChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- YEAR COMPARISON PAGE -->
+            <div class="page" id="comparison">
+                <div class="page-header">
+                    <h2>Year-Over-Year Comparison</h2>
+                    <p>
+                        Comparing the current year to previous years helps evaluate whether recent trends 
+                        represent improvement or deterioration in public safety.
+                    </p>
+                </div>
+
+                <div class="chart-section">
+                    <h3>Current Year vs Previous Years</h3>
+                    <div class="chart-description">
+                        This chart compares monthly crime totals for recent years, making it easy to see whether 
+                        the current year is tracking higher or lower than previous years. Month-by-month comparison 
+                        accounts for seasonal variations and provides a clear picture of year-over-year change. 
+                        A downward trend indicates improving public safety, while an upward trend suggests 
+                        increasing challenges.
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="yearComparisonChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-section">
+                    <h3>Annual Totals</h3>
+                    <div class="chart-description">
+                        This simple bar chart shows total crimes per year, providing a clear view of long-term 
+                        trends. Significant changes between years often correspond to major policy changes, 
+                        economic conditions, or data collection methodology updates.
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="yearlyTotalsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer">
+                Data Source: Chicago Data Portal | Updated Monthly | Built with R, Chart.js, and GitHub Pages
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                // Update active nav item
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Show corresponding page
+                const pageName = this.dataset.page;
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById(pageName).classList.add('active');
+                
+                // Scroll to top
+                window.scrollTo(0, 0);
+            });
+        });
+
+        // Load metadata and populate stats
+        fetch('data/metadata.json')
+            .then(response => response.json())
+            .then(metadata => {
+                document.getElementById('totalCrimes').textContent = 
+                    metadata.total_records.toLocaleString();
+                
+                const startYear = metadata.date_range.start.substring(0, 4);
+                const endYear = metadata.date_range.end.substring(0, 4);
+                document.getElementById('dateRange').textContent = 
+                    `${startYear} - ${endYear}`;
+                
+                document.getElementById('lastUpdate').textContent = 
+                    metadata.last_updated.substring(0, 10);
+            });
+
+        // Chart: Yearly Overview
+        fetch('data/yearly_total.json')
+            .then(response => response.json())
+            .then(data => {
+                new Chart(document.getElementById('yearlyOverviewChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Total Crimes per Year',
+                            data: data.data,
+                            backgroundColor: 'rgba(30, 58, 138, 0.7)',
+                            borderColor: 'rgb(30, 58, 138)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            });
+
+        // Chart: Monthly Trends
+        fetch('data/monthly_total.json')
+            .then(response => response.json())
+            .then(data => {
+                new Chart(document.getElementById('monthlyTrendChart'), {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Monthly Crime Count',
+                            data: data.data,
+                            borderColor: 'rgb(30, 58, 138)',
+                            backgroundColor: 'rgba(30, 58, 138, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            });
+
+        // Chart: Recent 5-year trend
+        fetch('data/monthly_total.json')
+            .then(response => response.json())
+            .then(data => {
+                // Get last 60 months
+                const recent = {
+                    labels: data.labels.slice(-60),
+                    data: data.data.slice(-60)
+                };
+                
+                new Chart(document.getElementById('recentTrendChart'), {
+                    type: 'line',
+                    data: {
+                        labels: recent.labels,
+                        datasets: [{
+                            label: 'Monthly Crimes (Last 5 Years)',
+                            data: recent.data,
+                            borderColor: 'rgb(16, 185, 129)',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            });
+
+        // Chart: Top Crimes
+        fetch('data/metadata.json')
+            .then(response => response.json())
+            .then(metadata => {
+                const topCrimes = metadata.top_crimes.slice(0, 10);
+                new Chart(document.getElementById('topCrimesChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: topCrimes.map(c => c.crime_type),
+                        datasets: [{
+                            label: 'Total Incidents',
+                            data: topCrimes.map(c => c.count),
+                            backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                            borderColor: 'rgb(239, 68, 68)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            });
+
+        // Chart: Crime Types Over Time
+        fetch('data/monthly_by_type.json')
+            .then(response => response.json())
+            .then(data => {
+                new Chart(document.getElementById('crimeTypesTrendChart'), {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: data.datasets.slice(0, 7).map((dataset, i) => ({
+                            label: dataset.label,
+                            data: dataset.data,
+                            borderColor: `hsl(${i * 50}, 70%, 50%)`,
+                            backgroundColor: `hsla(${i * 50}, 70%, 50%, 0.1)`,
+                            tension: 0.4,
+                            fill: true
+                        }))
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                });
+            });
+
+        // Chart: Hourly Pattern
+        fetch('data/hourly_pattern.json')
+            .then(response => response.json())
+            .then(data => {
+                new Chart(document.getElementById('hourlyChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels.map(h => h + ':00'),
+                        datasets: [{
+                            label: 'Crimes by Hour',
+                            data: data.data,
+                            backgroundColor: 'rgba(99, 102, 241, 0.7)',
+                            borderColor: 'rgb(99, 102, 241)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            });
+
+        // Chart: Day of Week
+        fetch('data/dayofweek_pattern.json')
+            .then(response => response.json())
+            .then(data => {
+                new Chart(document.getElementById('dayOfWeekChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Crimes by Day',
+                            data: data.data,
+                            backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                            borderColor: 'rgb(245, 158, 11)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            });
+
+        // Chart: Year Comparison (last 3 years, month by month)
+        fetch('data/monthly_total.json')
+            .then(response => response.json())
+            .then(data => {
+                // Group by year and month
+                const yearData = {};
+                data.labels.forEach((label, i) => {
+                    const [year, month] = label.split('-');
+                    if (!yearData[year]) yearData[year] = [];
+                    yearData[year].push({ month, count: data.data[i] });
+                });
+                
+                const years = Object.keys(yearData).slice(-3);
+                const months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+                
+                new Chart(document.getElementById('yearComparisonChart'), {
+                    type: 'line',
+                    data: {
+                        labels: months.map(m => {
+                            const date = new Date(2000, parseInt(m) - 1);
+                            return date.toLocaleString('default', { month: 'short' });
+                        }),
+                        datasets: years.map((year, i) => ({
+                            label: year,
+                            data: months.map(m => {
+                                const item = yearData[year].find(d => d.month === m);
+                                return item ? item.count : null;
+                            }),
+                            borderColor: `hsl(${i * 120}, 70%, 50%)`,
+                            backgroundColor: `hsla(${i * 120}, 70%, 50%, 0.1)`,
+                            tension: 0.4
+                        }))
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            });
+
+        // Chart: Yearly Totals
+        fetch('data/yearly_total.json')
+            .then(response => response.json())
+            .then(data => {
+                new Chart(document.getElementById('yearlyTotalsChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Annual Crime Total',
+                            data: data.data,
+                            backgroundColor: 'rgba(30, 58, 138, 0.7)',
+                            borderColor: 'rgb(30, 58, 138)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            });
+    </script>
+</body>
+</html>
