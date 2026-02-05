@@ -1,0 +1,3 @@
+- Currently working on fixing auto updating data
+- Also still creating the dashboard
+- Also still creating the graphs to be applied on the dashboard
