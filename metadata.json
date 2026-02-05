@@ -1,0 +1,51 @@
+{
+  "last_updated": "2025-12-30 02:40:13 CST",
+  "total_records": 8468191,
+  "date_range": {
+    "start": "2001-01-01",
+    "end": "2025-12-20"
+  },
+  "top_crimes": [
+    {
+      "crime_type": "THEFT",
+      "count": 1798435
+    },
+    {
+      "crime_type": "BATTERY",
+      "count": 1542811
+    },
+    {
+      "crime_type": "CRIMINAL DAMAGE",
+      "count": 962943
+    },
+    {
+      "crime_type": "NARCOTICS",
+      "count": 764983
+    },
+    {
+      "crime_type": "ASSAULT",
+      "count": 568285
+    },
+    {
+      "crime_type": "OTHER OFFENSE",
+      "count": 528343
+    },
+    {
+      "crime_type": "BURGLARY",
+      "count": 447554
+    },
+    {
+      "crime_type": "MOTOR VEHICLE THEFT",
+      "count": 434198
+    },
+    {
+      "crime_type": "DECEPTIVE PRACTICE",
+      "count": 390822
+    },
+    {
+      "crime_type": "ROBBERY",
+      "count": 315529
+    }
+  ],
+  "data_source": "Chicago Data Portal - https://data.cityofchicago.org/"
+}
