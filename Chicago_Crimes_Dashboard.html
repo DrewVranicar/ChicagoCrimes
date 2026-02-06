@@ -14,7 +14,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #03090e;
+            background-color: #cacaca;
         }
 
         .container {
@@ -31,19 +31,23 @@
             position: fixed;
             height: 100vh;
             overflow-y: auto;
+            border-right: 4px solid #2563eb;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
         }
 
         .sidebar h1 {
             font-size: 1.5rem;
             margin-bottom: 10px;
             padding-bottom: 15px;
-            border-bottom: 2px solid rgba(6, 106, 255, 0.2);
+            border-bottom: 3px solid rgba(255, 255, 255, 0.4);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .sidebar .subtitle {
             font-size: 0.9rem;
-            color: rgba(255,255,255,0.7);
+            color: rgba(255,255,255,0.9);
             margin-bottom: 30px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
         }
 
         .nav-item {
@@ -55,16 +59,22 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            border: 2px solid transparent;
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .nav-item:hover {
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.2);
             transform: translateX(5px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
         .nav-item.active {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.25);
             font-weight: bold;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         .nav-icon {
@@ -99,17 +109,20 @@
             padding: 30px;
             border-radius: 12px;
             margin-bottom: 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2), 
+                        0 2px 4px rgba(0,0,0,0.1);
+            border: 3px solid #1e3a8a;
         }
 
         .page-header h2 {
-            color: #5ec1ff;
+            color: #1e3a8a;
             font-size: 2rem;
             margin-bottom: 15px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
         }
 
         .page-header p {
-            color: #666;
+            color: #444;
             line-height: 1.6;
             font-size: 1.05rem;
         }
@@ -123,11 +136,32 @@
         }
 
         .stat-card {
-            background: rgb(167, 167, 167);
+            background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.25), 
+                        0 2px 6px rgba(0,0,0,0.15);
             text-align: center;
+            border: 3px solid #1e3a8a;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.3), 
+                        0 6px 12px rgba(0,0,0,0.2);
         }
 
         .stat-value {
@@ -135,6 +169,7 @@
             font-weight: bold;
             color: #1e3a8a;
             margin-bottom: 8px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
         }
 
         .stat-label {
@@ -142,6 +177,7 @@
             font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 1px;
+            font-weight: 600;
         }
 
         .stat-change {
@@ -158,29 +194,49 @@
             padding: 30px;
             border-radius: 12px;
             margin-bottom: 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25), 
+                        0 4px 8px rgba(0,0,0,0.15);
+            border: 3px solid #1e3a8a;
+            transition: box-shadow 0.3s, transform 0.3s;
+        }
+
+        .chart-section:hover {
+            box-shadow: 0 12px 28px rgba(0,0,0,0.3), 
+                        0 6px 12px rgba(0,0,0,0.2);
+            transform: translateY(-2px);
         }
 
         .chart-section h3 {
             color: #1e3a8a;
             font-size: 1.5rem;
             margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #3b82f6;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
         }
 
         .chart-description {
-            color: #666;
+            color: #555;
             line-height: 1.6;
             margin-bottom: 25px;
             padding: 15px;
             background: #f8f9fa;
-            border-left: 4px solid #1e3a8a;
+            border-left: 5px solid #1e3a8a;
             border-radius: 4px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.08),
+                        0 2px 4px rgba(0,0,0,0.05);
+            border: 2px solid #e5e7eb;
         }
 
         .chart-container {
             position: relative;
             height: 400px;
             margin-top: 20px;
+            padding: 15px;
+            background: #fafafa;
+            border-radius: 8px;
+            border: 2px solid #d1d5db;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.05);
         }
 
         /* Footer */
@@ -189,6 +245,11 @@
             padding: 20px;
             color: #666;
             font-size: 0.9rem;
+            margin-top: 40px;
+            border-top: 3px solid #1e3a8a;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         /* Loading State */
@@ -204,6 +265,8 @@
                 width: 100%;
                 height: auto;
                 position: relative;
+                border-right: none;
+                border-bottom: 4px solid #2563eb;
             }
 
             .main-content {
@@ -274,7 +337,7 @@
                         <p style="margin-bottom: 15px;">
                             <strong>Processing Pipeline:</strong>
                         </p>
-                        <ul style="margin-left: 20px; color: #666;">
+                        <ul style="margin-left: 20px; color: #555;">
                             <li>Download crime data via Socrata Open Data API</li>
                             <li>Extract relevant fields (date, crime type, arrest status, domestic violence flag)</li>
                             <li>Aggregate data into monthly, daily, and hourly summaries</li>
