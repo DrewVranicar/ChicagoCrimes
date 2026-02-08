@@ -103,7 +103,7 @@ download_timeseries_data <- function(output_file, max_records = NULL) {
       offset <- offset + API_LIMIT
       
       if (!is.null(max_records) && total_downloaded >= max_records) break
-      if (nrow(chunk) < api_limit) break
+      if (nrow(chunk) < API_LIMIT) break
       
       Sys.sleep(0.3)
       
@@ -321,3 +321,4 @@ cat("Commit and push to GitHub to update your dashboard!\n\n")
 
 # Or for testing:
 # run_full_pipeline(max_records = 100000)
+
