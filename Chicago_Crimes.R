@@ -76,8 +76,7 @@ download_timeseries_data <- function(output_file, max_records = NULL) {
   first_chunk <- TRUE
   
   repeat {
-    url <- paste0(base_url, select_cols, "&$limit=", API_LIMIT, "&$offset=", offset)
-    
+    url <- paste0(base_url, select_cols, "&$limit=", API_LIMIT, "&$offset=", format(offset, scientific = FALSE))
     cat("  Downloading chunk at offset", format(offset, big.mark = ","), "...")
     
     tryCatch({
@@ -321,4 +320,5 @@ cat("Commit and push to GitHub to update your dashboard!\n\n")
 
 # Or for testing:
 # run_full_pipeline(max_records = 100000)
+
 
