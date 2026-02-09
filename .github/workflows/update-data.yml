@@ -1,45 +1,43 @@
-name: Update Chicago Crime Data
+name: Update Crime Data
 
 on:
   schedule:
-    # Run at 2 AM on the 1st of every month (UTC time)
     - cron: '0 2 1 * *'
-  
-  # Allow manual triggering from GitHub UI
   workflow_dispatch:
+
+# ADD THIS SECTION - Grant write permissions
+permissions:
+  contents: write
 
 jobs:
   update-crime-data:
     runs-on: ubuntu-latest
     
     steps:
-      # Step 1: Checkout your repository
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}  # Add this line
       
-      # Step 2: Set up R
       - name: Set up R
         uses: r-lib/actions/setup-r@v2
         with:
           r-version: '4.3.0'
       
-      # Step 3: Install required R packages
       - name: Install R dependencies
         run: |
           install.packages(c('data.table', 'lubridate', 'jsonlite'))
         shell: Rscript {0}
       
-      # Step 4: Run your R script to download and process data
       - name: Run data pipeline
         run: |
-          source('Chicago_Crimes.R')
+          source('crime_data_pipeline.R')
           run_full_pipeline()
         shell: Rscript {0}
       
-      # Step 5: Commit and push the updated data files
       - name: Commit updated data
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git add data/
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update crime data - $(date +'%Y-%m-%d')" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update crime data $(date +'%Y-%m-%d')" && git push)
