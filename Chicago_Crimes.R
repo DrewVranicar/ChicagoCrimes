@@ -35,7 +35,7 @@ run_full_pipeline <- function(output_dir = OUTPUT_DIR,
   cat("═══ STEP 1: DOWNLOADING DATA ═══\n")
   timeseries_file <- file.path(output_dir, "chicago_crimes_timeseries.csv")
   download_timeseries_data(output_file = timeseries_file, 
-                           max_records = max_records)
+                          max_records = max_records)
   
   # Step 2: Create CSV aggregations
   cat("\n═══ STEP 2: CREATING CSV AGGREGATIONS ═══\n")
@@ -76,7 +76,10 @@ download_timeseries_data <- function(output_file, max_records = NULL) {
   first_chunk <- TRUE
   
   repeat {
-    url <- paste0(base_url, select_cols, "&$limit=", API_LIMIT, "&$offset=", format(offset, scientific = FALSE))
+    # Format offset without scientific notation
+    url <- paste0(base_url, select_cols, "&$limit=", format(API_LIMIT, scientific = FALSE), 
+                  "&$offset=", format(offset, scientific = FALSE))
+    
     cat("  Downloading chunk at offset", format(offset, big.mark = ","), "...")
     
     tryCatch({
@@ -134,7 +137,7 @@ create_viz_datasets <- function(data_file, output_dir = OUTPUT_DIR) {
   dt[, year_month := floor_date(date, "month")]
   dt[, year := year(date)]
   dt[, hour := hour(date)]
-  dt[, wday := wday(date, label = TRUE, abbr = FALSE)]
+  dt[, wday := lubridate::wday(date, label = TRUE, abbr = FALSE)]
   
   # 1. Monthly totals
   cat("  Creating monthly aggregation...\n")
@@ -203,7 +206,7 @@ create_json_datasets <- function(data_file, output_dir = OUTPUT_DIR) {
   dt[, year_month := floor_date(date, "month")]
   dt[, year := year(date)]
   dt[, hour := hour(date)]
-  dt[, wday := wday(date, label = TRUE, abbr = FALSE)]
+  dt[, wday := lubridate::wday(date, label = TRUE, abbr = FALSE)]
   
   # 1. Monthly totals JSON
   monthly <- dt[, .N, by = year_month][order(year_month)]
@@ -279,6 +282,15 @@ generate_metadata <- function(data_file, output_dir = OUTPUT_DIR) {
     dt[, date := ymd_hms(date, quiet = TRUE)]
   }
   
+  # Convert top_crimes to a regular list for JSON compatibility
+  top_crimes_dt <- head(dt[, .N, by = primary_type][order(-N)], 10)
+  top_crimes_list <- lapply(1:nrow(top_crimes_dt), function(i) {
+    list(
+      crime_type = top_crimes_dt$primary_type[i],
+      count = top_crimes_dt$N[i]
+    )
+  })
+  
   metadata <- list(
     last_updated = format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"),
     total_records = nrow(dt),
@@ -286,7 +298,7 @@ generate_metadata <- function(data_file, output_dir = OUTPUT_DIR) {
       start = format(min(dt$date, na.rm = TRUE), "%Y-%m-%d"),
       end = format(max(dt$date, na.rm = TRUE), "%Y-%m-%d")
     ),
-    top_crimes = head(dt[, .N, by = primary_type][order(-N)], 10),
+    top_crimes = top_crimes_list,
     data_source = "Chicago Data Portal - https://data.cityofchicago.org/"
   )
   
@@ -320,5 +332,3 @@ cat("Commit and push to GitHub to update your dashboard!\n\n")
 
 # Or for testing:
 # run_full_pipeline(max_records = 100000)
-
-
