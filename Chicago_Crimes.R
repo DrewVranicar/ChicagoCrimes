@@ -1,17 +1,17 @@
-# Chicago Crime Data - AUTOMATED UPDATE PIPELINE (TEST MODE)
-# Downloads ONLY 50,000 records to verify GitHub Actions + push works
+# Chicago Crime Data - AUTOMATED UPDATE PIPELINE (PRODUCTION MODE)
+# Downloads ALL Chicago crime data safely using pagination
 
 library(data.table)
 library(lubridate)
 library(jsonlite)
 
 # =============================================================================
-# CONFIGURATION (TEST MODE)
+# CONFIGURATION
 # =============================================================================
 
 OUTPUT_DIR <- "data"
 API_LIMIT <- 50000
-MAX_RECORDS <- 50000   # <<< HARD LIMIT FOR TESTING
+MAX_RECORDS <- NULL   # NULL = download ALL data
 
 options(timeout = 300) # CI-safe timeout
 
@@ -28,8 +28,8 @@ run_full_pipeline <- function(output_dir = OUTPUT_DIR,
                               create_json = TRUE,
                               max_records = MAX_RECORDS) {
 
-  cat("\n=== CHICAGO CRIME DATA PIPELINE (TEST MODE) ===\n")
-  cat("Max records:", max_records, "\n")
+  cat("\n=== CHICAGO CRIME DATA PIPELINE (PRODUCTION MODE) ===\n")
+  cat("Max records:", ifelse(is.null(max_records), "ALL", max_records), "\n")
   cat("Start time:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n")
 
   start_time <- Sys.time()
@@ -67,46 +67,77 @@ run_full_pipeline <- function(output_dir = OUTPUT_DIR,
 }
 
 # =============================================================================
-# DOWNLOAD FUNCTION (TEST MODE – ONE CHUNK ONLY)
+# DOWNLOAD FUNCTION (FULL PAGINATION, CI-SAFE)
 # =============================================================================
 
-download_timeseries_data <- function(output_file, max_records = 50000) {
+download_timeseries_data <- function(output_file, max_records = NULL) {
 
   base_url <- "https://data.cityofchicago.org/resource/ijzp-q8t2.csv"
   select_cols <- "?$select=date,primary_type,arrest,domestic"
 
-  url <- paste0(
-    base_url,
-    select_cols,
-    "&$limit=", format(max_records, scientific = FALSE),
-    "&$offset=0"
-  )
+  offset <- 0
+  total_downloaded <- 0
+  first_chunk <- TRUE
 
-  cat("  Downloading first", max_records, "records...\n")
+  repeat {
 
-  chunk <- tryCatch({
-    fread(url, showProgress = FALSE)
-  }, error = function(e) {
-    stop("Download failed: ", e$message)
-  })
+    url <- paste0(
+      base_url,
+      select_cols,
+      "&$limit=", format(API_LIMIT, scientific = FALSE),
+      "&$offset=", format(offset, scientific = FALSE)
+    )
 
-  if (nrow(chunk) == 0) {
-    stop("No data returned from API")
+    cat("  Downloading chunk at offset",
+        format(offset, big.mark = ","), "...")
+
+    success <- tryCatch({
+
+      chunk <- fread(url, showProgress = FALSE)
+
+      if (nrow(chunk) == 0) {
+        cat(" Done!\n")
+        return(FALSE)
+      }
+
+      # Clean immediately
+      chunk[, date := ymd_hms(date, quiet = TRUE)]
+      chunk[, arrest := arrest == "true"]
+      chunk[, domestic := domestic == "true"]
+      chunk[, primary_type := trimws(primary_type)]
+
+      fwrite(chunk, output_file, append = !first_chunk)
+
+      total_downloaded <- total_downloaded + nrow(chunk)
+      cat(" ✓", format(nrow(chunk), big.mark = ","), "records\n")
+
+      first_chunk <- FALSE
+      offset <- offset + API_LIMIT
+
+      if (!is.null(max_records) &&
+          total_downloaded >= max_records) return(FALSE)
+
+      if (nrow(chunk) < API_LIMIT) return(FALSE)
+
+      Sys.sleep(0.4)
+      TRUE
+
+    }, error = function(e) {
+      cat("\n  ⚠ Download failed at offset",
+          format(offset, big.mark = ","), "\n")
+      cat("  Reason:", e$message, "\n")
+      FALSE
+    })
+
+    if (!success) break
   }
 
-  # Clean
-  chunk[, date := ymd_hms(date, quiet = TRUE)]
-  chunk[, arrest := arrest == "true"]
-  chunk[, domestic := domestic == "true"]
-  chunk[, primary_type := trimws(primary_type)]
-
-  fwrite(chunk, output_file)
-
-  cat("  ✓ Records downloaded:", nrow(chunk), "\n")
+  cat("\n  ✓ Total downloaded:",
+      format(total_downloaded, big.mark = ","), "records\n")
   cat("  ✓ File size:",
       round(file.size(output_file) / 1024^2, 1), "MB\n")
 
-  return(nrow(chunk))
+  return(total_downloaded)
 }
 
 # =============================================================================
@@ -122,12 +153,10 @@ create_viz_datasets <- function(data_file, output_dir) {
   dt[, hour := hour(date)]
   dt[, wday := wday(date, label = TRUE, abbr = FALSE)]
 
-  # Monthly totals
   monthly <- dt[, .N, by = year_month][order(year_month)]
   setnames(monthly, c("date", "crime_count"))
   fwrite(monthly, file.path(output_dir, "monthly_total.csv"))
 
-  # Monthly by crime type (top 10)
   top_types <- dt[, .N, by = primary_type][order(-N)][1:10]$primary_type
   monthly_by_type <- dt[primary_type %in% top_types,
                         .N,
@@ -136,7 +165,6 @@ create_viz_datasets <- function(data_file, output_dir) {
   fwrite(monthly_by_type,
          file.path(output_dir, "monthly_by_type.csv"))
 
-  # Daily (last 2 years)
   cutoff <- max(dt$date) - years(2)
   daily <- dt[date >= cutoff,
               .N,
@@ -144,7 +172,6 @@ create_viz_datasets <- function(data_file, output_dir) {
   setnames(daily, c("date", "crime_count"))
   fwrite(daily, file.path(output_dir, "daily_recent.csv"))
 
-  # Yearly totals
   yearly <- dt[, .N, by = year][order(year)]
   setnames(yearly, c("year", "crime_count"))
   fwrite(yearly, file.path(output_dir, "yearly_total.csv"))
@@ -162,21 +189,15 @@ create_json_datasets <- function(data_file, output_dir) {
 
   dt[, year_month := floor_date(date, "month")]
   dt[, year := year(date)]
-  dt[, hour := hour(date)]
-  dt[, wday := wday(date, label = TRUE, abbr = FALSE)]
 
-  # Monthly totals
   monthly <- dt[, .N, by = year_month][order(year_month)]
   write_json(
-    list(
-      labels = format(monthly$year_month, "%Y-%m"),
-      data = monthly$N
-    ),
+    list(labels = format(monthly$year_month, "%Y-%m"),
+         data = monthly$N),
     file.path(output_dir, "monthly_total.json"),
     auto_unbox = TRUE, pretty = TRUE
   )
 
-  # Yearly totals
   yearly <- dt[, .N, by = year][order(year)]
   write_json(
     list(labels = yearly$year, data = yearly$N),
@@ -195,9 +216,7 @@ generate_metadata <- function(data_file, output_dir) {
 
   dt <- fread(data_file, showProgress = FALSE)
 
-  top_crimes <- head(
-    dt[, .N, by = primary_type][order(-N)], 10
-  )
+  top_crimes <- head(dt[, .N, by = primary_type][order(-N)], 10)
 
   metadata <- list(
     last_updated = format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"),
@@ -227,6 +246,6 @@ generate_metadata <- function(data_file, output_dir) {
 # ENTRY POINT
 # =============================================================================
 
-cat("\nTEST MODE ENABLED\n")
+cat("\nPRODUCTION MODE ENABLED\n")
 cat("Run with:\n")
 cat("  run_full_pipeline()\n\n")
