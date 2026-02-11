@@ -1,6 +1,6 @@
 {
-  "last_updated": "2026-02-11 19:01:15 UTC",
-  "total_records": 50000,
+  "last_updated": "2026-02-11 20:07:47 UTC",
+  "total_records": 8493086,
   "date_range": {
     "start": null,
     "end": null
@@ -8,43 +8,43 @@
   "top_crimes": [
     {
       "crime_type": "THEFT",
-      "count": 11376
+      "count": 1803902
     },
     {
       "crime_type": "BATTERY",
-      "count": 9079
+      "count": 1547104
     },
     {
       "crime_type": "CRIMINAL DAMAGE",
-      "count": 5714
-    },
-    {
-      "crime_type": "ASSAULT",
-      "count": 4371
-    },
-    {
-      "crime_type": "MOTOR VEHICLE THEFT",
-      "count": 4046
-    },
-    {
-      "crime_type": "OTHER OFFENSE",
-      "count": 3445
-    },
-    {
-      "crime_type": "DECEPTIVE PRACTICE",
-      "count": 2873
-    },
-    {
-      "crime_type": "BURGLARY",
-      "count": 2328
+      "count": 965691
     },
     {
       "crime_type": "NARCOTICS",
-      "count": 1519
+      "count": 765766
     },
     {
-      "crime_type": "CRIMINAL TRESPASS",
-      "count": 1302
+      "crime_type": "ASSAULT",
+      "count": 570329
+    },
+    {
+      "crime_type": "OTHER OFFENSE",
+      "count": 530096
+    },
+    {
+      "crime_type": "BURGLARY",
+      "count": 448655
+    },
+    {
+      "crime_type": "MOTOR VEHICLE THEFT",
+      "count": 436226
+    },
+    {
+      "crime_type": "DECEPTIVE PRACTICE",
+      "count": 392770
+    },
+    {
+      "crime_type": "ROBBERY",
+      "count": 316058
     }
   ]
 }
