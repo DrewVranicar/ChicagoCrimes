@@ -180,14 +180,6 @@
             font-weight: 600;
         }
 
-        .stat-change {
-            margin-top: 8px;
-            font-size: 0.85rem;
-        }
-
-        .stat-change.positive { color: #10b981; }
-        .stat-change.negative { color: #ef4444; }
-
         /* Chart Sections */
         .chart-section {
             background: white;
@@ -239,6 +231,39 @@
             box-shadow: inset 0 2px 6px rgba(0,0,0,0.05);
         }
 
+        /* Heatmap Table Styling */
+        #heatmapContainer table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        #heatmapContainer th,
+        #heatmapContainer td {
+            padding: 10px;
+            border: 2px solid #1e3a8a;
+            text-align: center;
+        }
+
+        #heatmapContainer th {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        #heatmapContainer td {
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        #heatmapContainer td:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            position: relative;
+        }
+
         /* Footer */
         .footer {
             text-align: center;
@@ -250,13 +275,6 @@
             background: rgba(255, 255, 255, 0.5);
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Loading State */
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #666;
         }
 
         /* Responsive */
@@ -306,6 +324,10 @@
             <div class="nav-item" data-page="comparison">
                 <span class="nav-icon">📊</span>
                 <span>Year Comparison</span>
+            </div>
+            <div class="nav-item" data-page="advanced">
+                <span class="nav-icon">🔬</span>
+                <span>Advanced Analytics</span>
             </div>
         </nav>
 
@@ -520,6 +542,94 @@
                 </div>
             </div>
 
+            <!-- ADVANCED ANALYTICS PAGE -->
+            <div class="page" id="advanced">
+                <div class="page-header">
+                    <h2>Advanced Analytics</h2>
+                    <p>
+                        Deep-dive analysis into arrest rates, crime concentration, seasonal patterns, 
+                        and detailed temporal heatmaps to uncover hidden insights in Chicago's crime data.
+                    </p>
+                </div>
+
+                <div class="chart-section">
+                    <h3>Arrest Rate Trends</h3>
+                    <div class="chart-description">
+                        This chart shows the percentage of reported crimes that resulted in arrests over time. 
+                        Declining arrest rates may indicate challenges in law enforcement resources or changes 
+                        in crime reporting practices. Rising rates suggest improved clearance rates and 
+                        investigative effectiveness.
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="arrestRateChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-section">
+                    <h3>Crime Concentration Analysis</h3>
+                    <div class="chart-description">
+                        This pie chart reveals what percentage of total crimes are concentrated in the top 5 
+                        crime types versus all others. High concentration indicates a few crime types dominate, 
+                        while low concentration suggests more diverse criminal activity. This helps prioritize 
+                        law enforcement strategies.
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="crimeConcentrationChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-section">
+                    <h3>Domestic vs Non-Domestic Crimes</h3>
+                    <div class="chart-description">
+                        Comparing domestic-related crimes (family/household violence) to non-domestic incidents 
+                        reveals important social patterns. Domestic crimes often require different intervention 
+                        strategies, including social services and victim support programs, compared to other 
+                        crime types.
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="domesticComparisonChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-section">
+                    <h3>Year-Over-Year % Change</h3>
+                    <div class="chart-description">
+                        This bar chart shows the percentage change in total crimes from one year to the next. 
+                        Positive values (red bars) indicate crime increased compared to the previous year, while 
+                        negative values (green bars) show improvement. This helps identify whether recent trends 
+                        are accelerating or reversing.
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="yoyChangeChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-section">
+                    <h3>Hour × Day of Week Heatmap</h3>
+                    <div class="chart-description">
+                        This table shows crime frequency across every hour of every day of the week. 
+                        Darker blue colors indicate higher crime activity. Notice patterns like late-night 
+                        weekend spikes or weekday afternoon increases. This data is crucial for optimizing 
+                        patrol schedules and resource allocation.
+                    </div>
+                    <div class="chart-container" style="height: auto; overflow-x: auto; padding: 20px;">
+                        <div id="heatmapContainer"></div>
+                    </div>
+                </div>
+
+                <div class="chart-section">
+                    <h3>3-Year Monthly Comparison</h3>
+                    <div class="chart-description">
+                        Compare the most recent three years month-by-month to see if seasonal patterns are 
+                        consistent and whether the current year is tracking better or worse than previous years. 
+                        This helps separate seasonal variation from actual trends.
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="threeYearComparisonChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
             <div class="footer">
                 Data Source: Chicago Data Portal | Updated Monthly | Built with R, Chart.js, and GitHub Pages
             </div>
@@ -530,21 +640,18 @@
         // Navigation
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', function() {
-                // Update active nav item
                 document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
                 this.classList.add('active');
                 
-                // Show corresponding page
                 const pageName = this.dataset.page;
                 document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
                 document.getElementById(pageName).classList.add('active');
                 
-                // Scroll to top
                 window.scrollTo(0, 0);
             });
         });
 
-        // Load metadata and populate stats
+        // Load metadata
         fetch('data/metadata.json')
             .then(response => response.json())
             .then(metadata => {
@@ -579,9 +686,7 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false }
-                        }
+                        plugins: { legend: { display: false } }
                     }
                 });
             });
@@ -614,7 +719,6 @@
         fetch('data/monthly_total.json')
             .then(response => response.json())
             .then(data => {
-                // Get last 60 months
                 const recent = {
                     labels: data.labels.slice(-60),
                     data: data.data.slice(-60)
@@ -661,9 +765,7 @@
                         indexAxis: 'y',
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false }
-                        }
+                        plugins: { legend: { display: false } }
                     }
                 });
             });
@@ -715,9 +817,7 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false }
-                        }
+                        plugins: { legend: { display: false } }
                     }
                 });
             });
@@ -741,18 +841,15 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false }
-                        }
+                        plugins: { legend: { display: false } }
                     }
                 });
             });
 
-        // Chart: Year Comparison (last 3 years, month by month)
+        // Chart: Year Comparison
         fetch('data/monthly_total.json')
             .then(response => response.json())
             .then(data => {
-                // Group by year and month
                 const yearData = {};
                 data.labels.forEach((label, i) => {
                     const [year, month] = label.split('-');
@@ -807,13 +904,217 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false }
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            });
+
+        // === ADVANCED ANALYTICS CHARTS ===
+
+        // Chart: Arrest Rate Trend
+        fetch('data/arrest_rate_trend.json')
+            .then(response => response.json())
+            .then(data => {
+                new Chart(document.getElementById('arrestRateChart'), {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Arrest Rate (%)',
+                            data: data.data,
+                            borderColor: 'rgb(239, 68, 68)',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
                         }
+                    }
+                });
+            });
+
+        // Chart: Crime Concentration
+        fetch('data/crime_concentration.json')
+            .then(response => response.json())
+            .then(data => {
+                new Chart(document.getElementById('crimeConcentrationChart'), {
+                    type: 'pie',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            data: data.data,
+                            backgroundColor: [
+                                'rgba(239, 68, 68, 0.8)',
+                                'rgba(245, 158, 11, 0.8)',
+                                'rgba(59, 130, 246, 0.8)',
+                                'rgba(16, 185, 129, 0.8)',
+                                'rgba(139, 92, 246, 0.8)',
+                                'rgba(148, 163, 184, 0.6)'
+                            ],
+                            borderColor: '#fff',
+                            borderWidth: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'right' },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.label + ': ' + context.parsed + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+
+        // Chart: Domestic Comparison
+        fetch('data/domestic_comparison.json')
+            .then(response => response.json())
+            .then(data => {
+                new Chart(document.getElementById('domesticComparisonChart'), {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: data.datasets.map((dataset, i) => ({
+                            label: dataset.label,
+                            data: dataset.data,
+                            borderColor: i === 0 ? 'rgb(59, 130, 246)' : 'rgb(239, 68, 68)',
+                            backgroundColor: i === 0 ? 'rgba(59, 130, 246, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }))
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            });
+
+        // Chart: Year-over-Year Change
+        fetch('data/yoy_change.json')
+            .then(response => response.json())
+            .then(data => {
+                new Chart(document.getElementById('yoyChangeChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Year-over-Year Change (%)',
+                            data: data.data,
+                            backgroundColor: data.data.map(val => 
+                                val > 0 ? 'rgba(239, 68, 68, 0.7)' : 'rgba(16, 185, 129, 0.7)'
+                            ),
+                            borderColor: data.data.map(val => 
+                                val > 0 ? 'rgb(239, 68, 68)' : 'rgb(16, 185, 129)'
+                            ),
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.parsed.y + '%';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+
+        // Heatmap: Hour × Day of Week
+        fetch('data/hour_day_heatmap.csv')
+            .then(response => response.text())
+            .then(csv => {
+                const rows = csv.trim().split('\n');
+                const headers = rows[0].split(',');
+                const days = headers.slice(1);
+                
+                let html = '<table>';
+                html += '<thead><tr><th>Hour</th>';
+                days.forEach(day => {
+                    html += `<th>${day}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+                
+                for (let i = 1; i < rows.length; i++) {
+                    const cols = rows[i].split(',');
+                    const hour = cols[0];
+                    html += `<tr><td><strong>${hour}:00</strong></td>`;
+                    
+                    const values = cols.slice(1).map(Number);
+                    const max = Math.max(...values);
+                    const min = Math.min(...values);
+                    
+                    values.forEach(val => {
+                        const intensity = (val - min) / (max - min);
+                        const bg = `rgba(30, 58, 138, ${0.2 + intensity * 0.7})`;
+                        const color = intensity > 0.6 ? '#fff' : '#333';
+                        html += `<td style="background: ${bg}; color: ${color};">${val.toLocaleString()}</td>`;
+                    });
+                    html += '</tr>';
+                }
+                html += '</tbody></table>';
+                
+                document.getElementById('heatmapContainer').innerHTML = html;
+            });
+
+        // Chart: Three Year Comparison
+        fetch('data/three_year_comparison.json')
+            .then(response => response.json())
+            .then(data => {
+                new Chart(document.getElementById('threeYearComparisonChart'), {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: data.datasets.map((dataset, i) => ({
+                            label: dataset.label,
+                            data: dataset.data,
+                            borderColor: `hsl(${i * 120}, 70%, 50%)`,
+                            backgroundColor: `hsla(${i * 120}, 70%, 50%, 0.1)`,
+                            tension: 0.4,
+                            fill: false,
+                            borderWidth: 3
+                        }))
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
                     }
                 });
             });
     </script>
 </body>
 </html>
-
