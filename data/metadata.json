@@ -1,6 +1,6 @@
 {
-  "last_updated": "2026-07-01 06:46:07 UTC",
-  "total_records": 8583306,
+  "last_updated": "2026-08-01 05:43:23 UTC",
+  "total_records": 8604907,
   "date_range": {
     "start": null,
     "end": null
@@ -8,43 +8,43 @@
   "top_crimes": [
     {
       "crime_type": "THEFT",
-      "count": 1823367
+      "count": 1827852
     },
     {
       "crime_type": "BATTERY",
-      "count": 1563610
+      "count": 1567561
     },
     {
       "crime_type": "CRIMINAL DAMAGE",
-      "count": 975180
+      "count": 977643
     },
     {
       "crime_type": "NARCOTICS",
-      "count": 768160
+      "count": 768762
     },
     {
       "crime_type": "ASSAULT",
-      "count": 578354
+      "count": 580273
     },
     {
       "crime_type": "OTHER OFFENSE",
-      "count": 536271
+      "count": 537705
     },
     {
       "crime_type": "BURGLARY",
-      "count": 454324
+      "count": 455566
     },
     {
       "crime_type": "MOTOR VEHICLE THEFT",
-      "count": 443218
+      "count": 444886
     },
     {
       "crime_type": "DECEPTIVE PRACTICE",
-      "count": 398766
+      "count": 400208
     },
     {
       "crime_type": "ROBBERY",
-      "count": 317699
+      "count": 318137
     }
   ]
 }
